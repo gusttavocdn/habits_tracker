@@ -19,9 +19,11 @@ export async function routes(app: FastifyInstance) {
         title,
         created_at: today,
         weekDays: {
-          create: weekDays.map((weekDay) => ({
-            week_day: weekDay,
-          })),
+          create: weekDays.map((weekDay) => {
+            return {
+              week_day: weekDay,
+            };
+          }),
         },
       },
     });
@@ -50,7 +52,7 @@ export async function routes(app: FastifyInstance) {
       },
     });
 
-    const day = await prisma.day.findUnique({
+    const day = await prisma.day.findFirst({
       where: {
         date: parsedDate.toDate(),
       },
@@ -59,9 +61,10 @@ export async function routes(app: FastifyInstance) {
       },
     });
 
-    const completedHabits = day?.dayHabits.filter(
-      (dayHabit) => dayHabit.habit_id
-    );
+    const completedHabits =
+      day?.dayHabits.map((dayHabit) => {
+        return dayHabit.habit_id;
+      }) ?? [];
 
     return {
       possibleHabits,
@@ -120,22 +123,23 @@ export async function routes(app: FastifyInstance) {
   app.get('/summary', async () => {
     const summary = await prisma.$queryRaw`
       SELECT 
-        D.id, D.date,
+        D.id, 
+        D.date,
         (
           SELECT 
-            cast(COUNT(*) as float)
+            cast(count(*) as float)
           FROM day_habits DH
           WHERE DH.day_id = D.id
         ) as completed,
         (
           SELECT
-            cast(COUNT(*) as float)
-            FROM habit_week_days HWD
-            JOIN habits H
-              ON H.id = HWD.habit_id
-            WHERE
-              HWD.week_day = cast(strftime('%w', D.date/1000.0, 'unixepoch') as int)
-              AND H.created_at <= D.date
+            cast(count(*) as float)
+          FROM habit_week_days HDW
+          JOIN habits H
+            ON H.id = HDW.habit_id
+          WHERE
+            HDW.week_day = cast(strftime('%w', D.date/1000.0, 'unixepoch') as int)
+            AND H.created_at <= D.date
         ) as amount
       FROM days D
     `;
