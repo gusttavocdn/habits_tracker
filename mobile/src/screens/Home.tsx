@@ -1,17 +1,18 @@
+import { useCallback, useState } from 'react';
+import { Text, View, ScrollView, Alert } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { View, Text, ScrollView, Alert } from 'react-native';
-import { HabitDay, DAY_SIZE } from '../components/HabitDay';
-import { Header } from '../components/Header';
-import { generateDatesFromYearBeginning } from '../utils/generate-dates-from-year-beginning';
+
 import { api } from '../lib/axios';
-import { useState, useCallback } from 'react';
+import { Header } from '../components/Header';
 import { Loading } from '../components/Loading';
+import { HabitDay, DAY_SIZE } from '../components/HabitDay';
 import dayjs from 'dayjs';
+import { generateDatesFromYearBeginning } from '../utils/generate-dates-from-year-beginning';
 
 const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 const datesFromYearStart = generateDatesFromYearBeginning();
-const minSummaryDateSizes = 18 * 5;
-const amountOfDaysToFill = minSummaryDateSizes - datesFromYearStart.length;
+const minimunSummaryDatesSizes = 18 * 5;
+const amountOfDaysToFill = minimunSummaryDatesSizes - datesFromYearStart.length;
 
 type SummaryProps = Array<{
   id: string;
@@ -26,26 +27,26 @@ export function Home() {
 
   const { navigate } = useNavigation();
 
-  const fetchData = async () => {
+  async function fetchData() {
     try {
       setLoading(true);
       const { data } = await api.get('/summary');
       setSummary(data);
     } catch (error) {
-      Alert.alert('Ops', 'Não foi possivel carregar o súmario dos habitos');
+      Alert.alert('Ops', 'Não foi possível carregar o sumário de hábitos.');
       console.log(error);
     } finally {
       setLoading(false);
     }
-  };
-
-  if (loading) return <Loading />;
+  }
 
   useFocusEffect(
     useCallback(() => {
       fetchData();
     }, [])
   );
+
+  if (loading) return <Loading />;
 
   return (
     <View className='flex-1 bg-background px-8 pt-16'>
