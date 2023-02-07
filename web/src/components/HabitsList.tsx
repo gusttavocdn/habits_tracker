@@ -4,21 +4,21 @@ import { Check } from 'phosphor-react';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/axios';
 
-type HabitsInfo = {
+interface HabitLisProps {
+  date: Date;
+  onCompletedChanged: (completed: number) => void;
+}
+
+interface HabitsInfo {
   possibleHabits: {
     id: string;
     title: string;
-    createad_at: string;
+    created_at: string;
   }[];
   completedHabits: string[];
-};
+}
 
-type HabitListProps = {
-  date: Date;
-  onCompletedChanged: (completed: number) => void;
-};
-
-export function HabitsList({ date, onCompletedChanged }: HabitListProps) {
+export function HabitsList({ date, onCompletedChanged }: HabitLisProps) {
   const [habitsInfo, setHabitsInfo] = useState<HabitsInfo>();
 
   useEffect(() => {
@@ -31,13 +31,13 @@ export function HabitsList({ date, onCompletedChanged }: HabitListProps) {
       .then((response) => {
         setHabitsInfo(response.data);
       });
-  });
+  }, []);
 
-  const handleToggleHabit = async (habitId: string) => {
+  async function handleToggleHabit(habitId: string) {
     const isHabitAlreadyCompleted =
       habitsInfo!.completedHabits.includes(habitId);
 
-    await api.patch(`/habits${habitId}/toggle`);
+    await api.patch(`/habits/${habitId}/toggle`);
 
     let completedHabits: string[] = [];
 
@@ -55,7 +55,7 @@ export function HabitsList({ date, onCompletedChanged }: HabitListProps) {
     });
 
     onCompletedChanged(completedHabits.length);
-  };
+  }
 
   const isDateInPast = dayjs(date).endOf('day').isBefore(new Date());
 
